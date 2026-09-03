@@ -42,7 +42,7 @@ dev = [
 # GPU via onnxruntime-gpu / CUDAExecutionProvider if available -- see
 # docs/local-ai.md.
 vision = [
-  "onnxruntime>=1.19.0,<2.0.0",
+  "onnxruntime>=1.29.0,<2.0.0",
 ]
 # Real deep-learning face detection (YuNet, opencv_zoo) and face-embedding
 # re-identification (AuraFace) via a downloaded ONNX model, replacing the
@@ -56,7 +56,7 @@ face_recognition = [
   "insightface>=0.7.3,<1.0.0",
   "onnx>=1.16.0,<2.0.0",
   "onnxconverter-common>=1.14.0,<2.0.0",
-  "onnxruntime>=1.19.0,<2.0.0",
+  "onnxruntime>=1.29.0,<2.0.0",
 ]
 # Real deep-learning license plate detection + OCR (fast-alpr), replacing
 # the always-available Russian-calibrated-cascade + Tesseract default
