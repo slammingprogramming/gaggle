@@ -33,7 +33,7 @@ dependencies = [
   "sqlalchemy>=2.0.32,<3.0.0",
   "structlog>=24.4.0,<25.0.0",
   "typer>=0.12.3,<1.0.0",
-  "uvicorn>=0.30.5,<1.0.0",
+  "uvicorn>=0.52.4,<1.0.0",
 ]
 
 [project.optional-dependencies]
