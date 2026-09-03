@@ -13,22 +13,31 @@ installable Python package -- it does not need to depend on
 class DetectorPlugin(Protocol):
     name: str
     version: str
-    def detect(self, windows: Iterable[EventWindow], clips: Iterable[NormalizedClip]) -> list[Signal]: ...
+
+    def detect(
+        self, windows: Iterable[EventWindow], clips: Iterable[NormalizedClip]
+    ) -> list[Signal]: ...
+
 
 class InferenceRulePlugin(Protocol):
     name: str
     version: str
+
     def apply(self, signals: Iterable[Signal]) -> list[Hypothesis]: ...
+
 
 class ExporterPlugin(Protocol):
     name: str
     version: str
     format_id: str
+
     def export(self, event_path: str, destination: str) -> str: ...
+
 
 class ReviewExtensionPlugin(Protocol):
     name: str
     version: str
+
     def on_review_action(self, action: ReviewAction, event: EventRecord) -> None: ...
 ```
 
@@ -103,6 +112,7 @@ from collections.abc import Iterable
 from gaggle.schemas.media import EventWindow, NormalizedClip
 from gaggle.schemas.signal import Signal
 
+
 class AlwaysLowConfidenceDetector:
     name = "my_package.always_low"
     version = "1.0.0"
@@ -174,6 +184,7 @@ requested; your extension is a secondary observer of it.
 # my_package/review.py
 from gaggle.schemas.event import EventRecord
 from gaggle.schemas.review import ReviewAction
+
 
 class LogToStderrExtension:
     name = "my_package.log_to_stderr"

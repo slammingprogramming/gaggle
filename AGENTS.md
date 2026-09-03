@@ -687,18 +687,27 @@ hand-tracing it), discovered during the 1.3 pass:
 
 ```python
 import types, sys
-pytest_shim = types.ModuleType('pytest')
+
+pytest_shim = types.ModuleType("pytest")
+
+
 class RaisesContext:
-    def __init__(self, exc_type): self.exc_type = exc_type
-    def __enter__(self): return self
+    def __init__(self, exc_type):
+        self.exc_type = exc_type
+
+    def __enter__(self):
+        return self
+
     def __exit__(self, exc_type, exc_val, exc_tb):
         assert exc_type is not None and issubclass(exc_type, self.exc_type)
         return True
+
+
 pytest_shim.raises = RaisesContext
-pytest_shim.mark = type('MarkModule', (), {
-    'skipif': staticmethod(lambda cond, reason='': (lambda x: x))
-})
-sys.modules['pytest'] = pytest_shim
+pytest_shim.mark = type(
+    "MarkModule", (), {"skipif": staticmethod(lambda cond, reason="": lambda x: x)}
+)
+sys.modules["pytest"] = pytest_shim
 # then import the test module and call every test_* function directly
 # (substitute a real tempfile.TemporaryDirectory() for any tmp_path fixture)
 ```
