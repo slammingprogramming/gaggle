@@ -1,5 +1,15 @@
 # Gaggle
 
+[![CI](https://github.com/slammingprogramming/gaggle/actions/workflows/ci.yml/badge.svg)](https://github.com/slammingprogramming/gaggle/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/slammingprogramming/gaggle/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/slammingprogramming/gaggle/security/code-scanning)
+[![License: AGPL v3 or later](https://img.shields.io/badge/License-AGPLv3--or--later-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](pyproject.toml)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Checked with mypy](https://www.mypy-lang.org/static/mypy_badge.svg)](https://mypy-lang.org/)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![Security Policy](https://img.shields.io/badge/security-policy-blue.svg)](SECURITY.md)
+[![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE_OF_CONDUCT.md)
+
 Gaggle is an offline-first, forensic-oriented, **camera-agnostic** encounter
 and incident analysis system. It started as a dashcam-only tool and is
 growing into something broader: a local, personal encounter-intelligence
@@ -12,6 +22,11 @@ with explainable rule-based inference, and produces versioned, append-only,
 hash-chained event metadata (`event.json`) as its primary artifact -- video
 is evidence to preserve, not the point of the system. The CLI command is
 still `gaggle`.
+
+**Contents:** [Principles](#principles) &middot; [Quick start](#quick-start)
+&middot; [Repository layout](#repository-layout) &middot;
+[What it does](#what-it-does) &middot; [License](#license) &middot;
+[Contributing](CONTRIBUTING.md) &middot; [Security](SECURITY.md)
 
 ## Principles
 
