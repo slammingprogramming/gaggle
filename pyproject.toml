@@ -24,7 +24,7 @@ dependencies = [
   # lookup) this project depends on always working with no extras
   # installed. Do not bump this past 5.0.0 without first confirming
   # upstream has restored (or this project has vendored) that data.
-  "opencv-contrib-python-headless>=4.10.0,<5.0.0",
+  "opencv-contrib-python-headless>=5.0.0.93,<6.0.0",
   "platformdirs>=4.11.5,<5.0.0",
   "pydantic>=2.13.5,<3.0.0",
   "pydantic-settings>=2.4.0,<3.0.0",
