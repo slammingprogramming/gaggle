@@ -126,7 +126,7 @@ signing = [
 # use. CPU-only; this is a short-audio-window classifier, not a
 # per-frame video detector, so GPU acceleration isn't needed here.
 gunshot = [
-  "sherpa-onnx>=1.13.0,<2.0.0",
+  "sherpa-onnx>=1.13.6,<2.0.0",
 ]
 all = [
   "gaggle[dev,vision,transcription,cloud,signing,face_recognition,plate_recognition,gunshot]",
