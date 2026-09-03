@@ -1,0 +1,36 @@
+# Starting point for an outdoor security camera (porch, driveway, yard).
+# Load directly: `--config examples/config/security-outdoor.yaml`.
+#
+# Only the fields that differ from RuntimeConfig's defaults are listed here
+# -- everything else (enrichment, lifecycle, storage, scoring, ...) inherits
+# the same defaults documented in examples/config.yaml. These starting
+# values are reasoned, not empirically validated against real outdoor
+# security footage -- see docs/limitations.md before relying on them
+# unmodified. Tune motion_threshold down if you're missing real events, or
+# up further if wind/foliage/passing-headlight false positives dominate
+# your review queue.
+active_profile: security-outdoor
+
+profiles:
+  security-outdoor:
+    sync:
+      # Motion-triggered clips from a single camera can be sparse -- many
+      # minutes apart between triggers, unlike a dashcam's continuous
+      # recording. A short session_gap_seconds would otherwise split every
+      # trigger into its own single-clip "session," defeating the point of
+      # session grouping. 10 minutes tolerates typical inter-trigger gaps
+      # without merging genuinely separate visits together.
+      session_gap_seconds: 600.0
+    detection:
+      # Outdoor scenes have constant low-level motion noise absent indoors:
+      # wind-blown foliage, shifting shadows, rain/snow, headlight sweep
+      # from passing traffic. Raised from the 0.20 default to tolerate that
+      # noise floor without raising it so far that a genuine approach is
+      # missed.
+      motion_threshold: 0.35
+      optical_flow:
+        # Same reasoning as motion_threshold: foliage/weather motion
+        # produces more baseline optical-flow divergence outdoors than the
+        # synthetic scenes the 0.015 default was measured against (see
+        # detection/optical_flow_analysis.py). Raised proportionally.
+        roi_divergence_delta_threshold: 0.025

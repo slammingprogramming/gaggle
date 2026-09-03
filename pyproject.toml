@@ -1,0 +1,178 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gaggle"
+version = "1.10.0"
+description = "Offline-first, forensic-oriented, camera-agnostic encounter and incident analysis system"
+readme = "README.md"
+requires-python = ">=3.12"
+license = "AGPL-3.0-or-later"
+authors = [{ name = "SlammingProgramming and contributors" }]
+dependencies = [
+  "alembic>=1.13,<2.0.0",
+  "fastapi>=0.115.0,<1.0.0",
+  "numpy>=1.26.0,<3.0.0",
+  "opencv-contrib-python-headless>=4.10.0,<5.0.0",
+  "platformdirs>=4.0,<5.0.0",
+  "pydantic>=2.8.0,<3.0.0",
+  "pydantic-settings>=2.4.0,<3.0.0",
+  "pyyaml>=6.0.1,<7.0.0",
+  "scipy>=1.13.0,<2.0.0",
+  "sqlalchemy>=2.0.32,<3.0.0",
+  "structlog>=24.4.0,<25.0.0",
+  "typer>=0.12.3,<1.0.0",
+  "uvicorn>=0.30.5,<1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+  "hypothesis>=6.112.0,<7.0.0",
+  "mypy>=1.11.1,<2.0.0",
+  "pre-commit>=3.8.0,<4.0.0",
+  "pytest>=8.3.2,<9.0.0",
+  "pytest-cov>=5.0.0,<6.0.0",
+  "ruff>=0.6.2,<1.0.0",
+  "types-requests>=2.32.0,<3.0.0",
+]
+# Local YOLO-style object/vehicle detection via a user-supplied ONNX model
+# (e.g. yolov8n.onnx). Runs fully offline once the model file is present;
+# only the one-time model download needs network access. CPU by default,
+# GPU via onnxruntime-gpu / CUDAExecutionProvider if available -- see
+# docs/local-ai.md.
+vision = [
+  "onnxruntime>=1.19.0,<2.0.0",
+]
+# Real deep-learning face detection (YuNet, opencv_zoo) and face-embedding
+# re-identification (AuraFace) via a downloaded ONNX model, replacing the
+# always-available Haar-cascade/LBPH default when enabled
+# (enrichment.face.detector: yunet / embedding_model: auraface). Models
+# are fetched on demand into a per-machine cache -- see core/models.py.
+# CPU by default; device: cuda uses onnxruntime's CUDAExecutionProvider if
+# onnxruntime-gpu is installed in place of the CPU package. See
+# docs/local-ai.md.
+face_recognition = [
+  "insightface>=0.7.3,<1.0.0",
+  "onnx>=1.16.0,<2.0.0",
+  "onnxconverter-common>=1.14.0,<2.0.0",
+  "onnxruntime>=1.19.0,<2.0.0",
+]
+# Real deep-learning license plate detection + OCR (fast-alpr), replacing
+# the always-available Russian-calibrated-cascade + Tesseract default
+# when enabled (enrichment.plate.detector: fast_alpr). Trained on
+# international ("global") plate formats, not one region -- see
+# docs/local-ai.md and docs/limitations.md for accuracy caveats. CPU by
+# default via the bundled onnxruntime CPU backend; device: cuda requires
+# additionally installing onnxruntime-gpu per fast-alpr's own convention.
+plate_recognition = [
+  "fast-alpr[onnx]>=0.4.0,<1.0.0",
+]
+# Local Whisper-based audio transcription (CPU or GPU). Requires a
+# one-time, user-initiated model download (see docs/local-ai.md); runs
+# fully offline afterward.
+transcription = [
+  "faster-whisper>=1.0.3,<2.0.0",
+]
+# Optional online enrichment: sends transcript TEXT (never video/audio) to
+# a user-configured OpenAI-compatible endpoint (e.g. OpenRouter, a local
+# LLM server). Entirely opt-in -- see docs/local-ai.md and
+# enrichment/llm_analysis.py.
+cloud = [
+  "requests>=2.32.0,<3.0.0",
+]
+# Ed25519 cryptographic signing of the event revision hash chain
+# (`workspace signing-init`, `signing.enabled`). Fully offline; no network
+# access needed at any point. See docs/local-ai.md.
+signing = [
+  "cryptography>=43.0.0,<50.0.0",
+]
+# Local, offline audio-event classification (`detection.gunshot.enabled`)
+# via a downloaded ONNX model (k2-fsa's zipformer-small audio tagger,
+# Apache-2.0, trained on AudioSet -- see core/models.py and
+# docs/local-ai.md). sherpa-onnx bundles its own onnxruntime statically
+# inside its compiled extension, so it does not conflict with the
+# separately-installed onnxruntime-gpu the vision/face_recognition extras
+# use. CPU-only; this is a short-audio-window classifier, not a
+# per-frame video detector, so GPU acceleration isn't needed here.
+gunshot = [
+  "sherpa-onnx>=1.13.0,<2.0.0",
+]
+all = [
+  "gaggle[dev,vision,transcription,cloud,signing,face_recognition,plate_recognition,gunshot]",
+]
+
+[project.urls]
+Homepage = "https://github.com/slammingprogramming/gaggle"
+Repository = "https://github.com/slammingprogramming/gaggle"
+Issues = "https://github.com/slammingprogramming/gaggle/issues"
+Changelog = "https://github.com/slammingprogramming/gaggle/blob/master/CHANGELOG.md"
+
+[project.scripts]
+gaggle = "gaggle.cli.app:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["gaggle*"]
+namespaces = true
+
+[tool.pytest.ini_options]
+addopts = "-q --basetemp=.pytest-tmp"
+testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["gaggle"]
+branch = true
+
+[tool.coverage.report]
+exclude_lines = [
+  "pragma: no cover",
+  "raise NotImplementedError",
+  "if TYPE_CHECKING:",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "B",
+  "UP",
+  "N",
+  "RUF",
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unused_configs = true
+namespace_packages = true
+explicit_package_bases = true
+mypy_path = [
+  "src",
+]
+
+[[tool.mypy.overrides]]
+module = [
+  "yaml",
+  "scipy.*",
+  "faster_whisper",
+  "onnxruntime",
+  "onnxruntime.*",
+  "onnx",
+  "onnxconverter_common",
+  "onnxconverter_common.*",
+  "insightface",
+  "insightface.*",
+  "fast_alpr",
+  "fast_alpr.*",
+  "sherpa_onnx",
+]
+ignore_missing_imports = true

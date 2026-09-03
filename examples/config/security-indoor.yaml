@@ -1,0 +1,26 @@
+# Starting point for an indoor security camera (living room, hallway,
+# entryway). Load directly: `--config examples/config/security-indoor.yaml`.
+#
+# Only the fields that differ from RuntimeConfig's defaults are listed here
+# -- everything else inherits the same defaults documented in
+# examples/config.yaml. These starting values are reasoned, not empirically
+# validated against real indoor security footage -- see docs/limitations.md.
+#
+# Vehicle telemetry (detection.telemetry) and optical-flow rapid-approach
+# detection (detection.optical_flow) need no override here: a static indoor
+# camera has no GPS track and little of the ego-motion optical flow those
+# detectors are tuned for, so they simply produce no signals rather than
+# false ones -- the same graceful degradation already documented for a
+# dashcam clip with no GPX sidecar. No code change needed for that; it's an
+# existing property of both detectors' inputs.
+active_profile: security-indoor
+
+profiles:
+  security-indoor:
+    detection:
+      # Indoor lighting is controlled and mostly static -- no wind, weather,
+      # or headlight sweep -- so the noise floor motion has to clear is
+      # lower than outdoors or a moving-vehicle dashcam. Lowered from the
+      # 0.20 default so a person entering a room at a normal pace still
+      # triggers a signal.
+      motion_threshold: 0.12

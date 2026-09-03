@@ -1,0 +1,44 @@
+name: Security report (initial contact only)
+description: >-
+  Start a private security report. Do NOT describe the vulnerability here --
+  this issue only anchors the identity-verification step in SECURITY.md.
+labels: ["security"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Read [SECURITY.md](../../SECURITY.md) before filing this. The short
+        version:
+
+        1. File this issue (no technical detail -- just the checkbox below).
+        2. Connect on SimpleX at the address in SECURITY.md.
+        3. Exchange signed messages referencing this issue to verify each
+           other's identity.
+        4. Discuss the actual vulnerability only after that verification,
+           entirely over SimpleX.
+
+        This issue will stay free of technical detail for as long as it's
+        open.
+  - type: checkboxes
+    id: acknowledgement
+    attributes:
+      label: Acknowledgement
+      options:
+        - label: >-
+            I have not included, and will not include, any technical detail
+            about the vulnerability (description, proof of concept, affected
+            code) in this issue or any public comment on it.
+          required: true
+        - label: I have read SECURITY.md and understand the verification process.
+          required: true
+  - type: input
+    id: contact
+    attributes:
+      label: How you'll connect
+      description: >-
+        Confirm you're connecting via the SimpleX address in SECURITY.md, or
+        note if you already have a verified connection with the maintainer
+        from a prior report (in which case you don't need this issue at
+        all -- just message them directly).
+    validations:
+      required: true

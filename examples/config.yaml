@@ -1,0 +1,286 @@
+active_profile: default
+
+profiles:
+  default:
+    pipeline:
+      window_duration_seconds: 10
+      window_stride_seconds: 5
+      timezone: UTC
+      # Forces a new event once a cluster of overlapping signal windows
+      # would span longer than this -- without a cap, near-continuous
+      # motion throughout a long recording collapses into one
+      # arbitrarily long event (observed on real footage: a single
+      # ~5-minute clip became one 4,000+ signal event). A reasoned
+      # starting point, not empirically validated against every driving
+      # scenario -- see docs/limitations.md. Set to `null` to disable
+      # the cap and restore unbounded merging.
+      max_event_duration_seconds: 120.0
+    sync:
+      # Clips from the same camera separated by more than this many seconds
+      # are treated as separate recording sessions (see docs/architecture.md
+      # for the full time-synchronization algorithm).
+      session_gap_seconds: 120.0
+      # Manual per-camera correction (camera_id -> seconds), empty by
+      # default -- for the real failure mode where the sync algorithm's
+      # start-alignment heuristic picks a genuinely wrong offset for a
+      # camera. Only affects clips normalized by a future `analyze` run;
+      # an event already built with wrong sync needs `gaggle events
+      # split` instead. See `gaggle config set-sync-offset` and
+      # docs/local-ai.md's cross-camera sync section.
+      manual_offset_overrides: {}
+    detection:
+      motion_threshold: 0.20
+      audio_spike_threshold: 0.45
+      min_signal_duration_seconds: 1.0
+      motion_sample_rate_hz: 2.0
+      audio_window_seconds: 0.5
+      min_object_region_area_ratio: 0.01
+      # Prefer a *.samples.json sidecar next to the source media when one is
+      # present (deterministic fixtures / manual calibration); otherwise run
+      # real ffmpeg/OpenCV/scipy analysis on the media itself.
+      use_fixture_signals_when_available: true
+      # How long ffmpeg is given to extract audio for spike/spectral
+      # analysis before being killed -- raised from ffmpeg's own default
+      # to accommodate long clips on slower hardware.
+      audio_extraction_timeout_seconds: 300.0
+      telemetry:
+        # GPX-derived speed/heading thresholds for hard-braking and
+        # speed-spike/heading-change signals -- see
+        # docs/local-ai.md's telemetry section.
+        hard_braking_threshold_mps2: 4.0
+        speed_spike_threshold_mps: 20.0
+        heading_change_threshold_deg_per_sec: 45.0
+      optical_flow:
+        # Dense Farneback optical-flow "rapid approach" detection --
+        # comparative, not absolute, divergence threshold specifically
+        # to reject ordinary ego-motion. See
+        # detection/optical_flow_analysis.py's module docstring for the
+        # measured true-positive/true-negative distributions this was
+        # tuned against.
+        sample_rate_hz: 2.0
+        roi_divergence_delta_threshold: 0.015
+      # Local ONNX audio-classifier gunshot/gunfire detection. Off by
+      # default -- requires the `gunshot` extra (a real, new dependency,
+      # unlike the zero-setup detectors above) and downloads a model on
+      # first use. See detection/gunshot_analysis.py's module docstring
+      # (why a classifier over a classical heuristic, model license/
+      # provenance) and docs/local-ai.md's "Gunshot detection" section
+      # before enabling.
+      gunshot:
+        enabled: false
+        confidence_threshold: 0.5
+        window_seconds: 2.0
+        hop_seconds: 1.0
+    enrichment:
+      # Shared frame-sampling rate for every image-based enrichment
+      # capability below (face/plate/vehicle detection, vehicle-appearance
+      # fingerprinting) -- how many frames per second of derived-clip
+      # video actually get examined. Lower this to trade detection
+      # density for real wall-clock speed on long/high-resolution
+      # footage. Also sets the time-window grouping tolerance for
+      # `encounters` below (twice this interval). A reasoned default,
+      # not empirically tuned -- see docs/limitations.md.
+      frame_sample_rate_hz: 1.0
+      # Local face detection + re-identification: on by default, fully
+      # offline. See docs/local-ai.md's "Face detection and local
+      # re-identification" section for the legal/ethical considerations
+      # before relying on this, and its "Model management" section for
+      # how the deep-learning options below fetch their weights.
+      face:
+        enabled: true
+        # "yunet" (opencv_zoo, Apache-2.0, the default): a real
+        # deep-learning detector, no new pip dependency, model weights
+        # fetched on first use. "haar": OpenCV's bundled cascade, zero
+        # setup, zero network, less accurate.
+        detector: yunet
+        # "auraface" (the default): a real deep-learning embedding
+        # (fal/AuraFace-v1, Apache-2.0, commercial-safe), needs the
+        # `face_recognition` extra -- falls back to "lbph" (classical
+        # texture-histogram clustering, zero setup) automatically if the
+        # extra isn't installed or the model fails to load, logged once,
+        # never silently drops a detection.
+        embedding_model: auraface
+        # "cpu" or "cuda" -- only consulted by auraface (onnxruntime); the
+        # lbph fallback is always CPU-only, and YuNet detection
+        # specifically cannot be GPU-accelerated via the standard pip
+        # OpenCV build regardless of this setting -- see
+        # docs/local-ai.md's "Model management" section for real,
+        # verified gotchas (a co-installed CPU onnxruntime package can
+        # silently win over onnxruntime-gpu; CUDA/cuDNN runtime DLLs
+        # need the `onnxruntime-gpu[cuda,cudnn]` extra). Defaults to
+        # "cuda"; falls back to CPU gracefully (logged) if it isn't
+        # actually available.
+        device: cuda
+        detector_min_size: [30, 30]
+        # LBPH distance scale (roughly 0-100+); only consulted when
+        # embedding_model: lbph.
+        cluster_distance_threshold: 70.0
+        # Cosine-distance scale (0-2), not comparable to the LBPH
+        # threshold above; only consulted when embedding_model: auraface.
+        embedding_cluster_distance_threshold: 0.35
+        min_detection_confidence: 0.15
+        duplicate_observation_window_seconds: 5.0
+        merge_suggestion_multiplier: 1.6
+      # Local license plate detection + OCR: on by default, fully offline
+      # (once tesseract is installed for the classical path -- see
+      # docs/local-ai.md's "License plate detection and OCR" section for
+      # per-platform install instructions).
+      plate:
+        enabled: true
+        # "fast_alpr" (the default): a real deep-learning detector+OCR
+        # (ankandrew/fast-alpr, MIT), trained on international plate
+        # formats, needs the `plate_recognition` extra -- falls back to
+        # "cascade" (classical Haar-cascade/MSER/contour detector +
+        # Tesseract OCR, calibrated for Russian-format plates)
+        # automatically if the extra isn't installed, logged once.
+        detector: fast_alpr
+        # Only consulted by fast_alpr; cascade is always CPU-only.
+        # Defaults to "cuda"; falls back to CPU gracefully (logged) if it
+        # isn't actually available -- see docs/local-ai.md.
+        device: cuda
+        detector_min_size: [40, 15]
+        min_detection_confidence: 0.10
+        auto_accept_ocr_confidence: 0.75
+        min_ocr_confidence_to_keep: 0.20
+        # OCR results outside this length range are almost always noise and
+        # are discarded before ever being stored.
+        min_plate_text_length: 4
+        max_plate_text_length: 9
+        duplicate_observation_window_seconds: 5.0
+        merge_suggestion_similarity_threshold: 0.75
+      # Voice activity detection + classical MFCC voiceprinting: also fully
+      # offline (just numpy/scipy), also on by default -- but a meaningfully
+      # weaker fingerprint than face/plate recognition. Read
+      # docs/local-ai.md's "Voice detection and local voiceprinting"
+      # section before treating any match as more than a loose heuristic.
+      voice:
+        enabled: true
+        min_segment_seconds: 0.3
+        energy_percentile_threshold: 60.0
+        merge_gap_seconds: 0.2
+        cluster_distance_threshold: 0.05
+        duplicate_observation_window_seconds: 5.0
+        merge_suggestion_multiplier: 1.6
+        # How long ffmpeg is given to extract audio for voiceprinting
+        # before being killed.
+        audio_extraction_timeout_seconds: 300.0
+      # Local vehicle re-identification by visual appearance (color/body
+      # shape) when no legible plate is available: on by default, fully
+      # offline, classical (not a learned embedding) -- meaningfully
+      # weaker than face/plate matching. See docs/limitations.md before
+      # relying on this to distinguish two similar-looking vehicles.
+      vehicle_appearance:
+        enabled: true
+        detector_min_size: [60, 40]
+        min_detection_confidence: 0.15
+        cluster_distance_threshold: 0.10
+        duplicate_observation_window_seconds: 5.0
+        merge_suggestion_multiplier: 1.6
+      # Local pedestrian/full-body re-identification by structured
+      # appearance attributes (dominant clothing color, aspect ratio) --
+      # never a learned face embedding or an AI-generated description.
+      # Off by default, unlike vehicle_appearance above: there's no
+      # classical zero-setup detector fallback here, it requires
+      # `vision.enabled: true` plus a real YOLO model file (turn both on
+      # together to use it). See enrichment/person_appearance.py's module
+      # docstring and docs/limitations.md before relying on this.
+      person_appearance:
+        enabled: false
+        min_detection_confidence: 0.15
+        cluster_distance_threshold: 0.10
+        duplicate_observation_window_seconds: 5.0
+        merge_suggestion_multiplier: 1.6
+      # Local YOLO-ONNX vehicle/pedestrian object detection: off until you
+      # supply a model file (see docs/local-ai.md for how to obtain one).
+      # Its boxes are also used opportunistically by vehicle_appearance
+      # above, when loaded, for more precise vehicle regions -- and are
+      # required (not optional) for person_appearance above.
+      vision:
+        enabled: false
+        model_path: null
+        device: cuda
+        confidence_threshold: 0.35
+      # Local Whisper transcription: off until you install the
+      # 'transcription' extra and (on first use) download a model.
+      transcription:
+        enabled: false
+        # tiny/base/small/medium/large-v3 -- larger models are
+        # meaningfully more accurate and meaningfully slower,
+        # especially on CPU. Start small and size up only if accuracy
+        # on your own footage actually needs it.
+        model_name: base
+        # faster-whisper/ctranslate2's own device auto-detection -- real
+        # GPU if genuinely usable, CPU otherwise. Unlike the onnxruntime
+        # options above, a hard "cuda" here would raise (not gracefully
+        # fall back) if CUDA turns out to be unavailable, so "auto" is
+        # the safe default rather than "cuda".
+        device: auto
+        # "int8" is fastest on CPU; on `device: cuda`, "float16" gets more
+        # GPU throughput than int8 at a real accuracy cost that's usually
+        # worth it for the speed -- see docs/local-ai.md.
+        compute_type: int8
+      # Optional cloud LLM transcript analysis: off by default everywhere.
+      # The only feature in this project that sends data over the network
+      # by default when enabled, and only ever transcript *text*, never
+      # video/audio/file paths. See docs/local-ai.md.
+      cloud:
+        enabled: false
+        endpoint: null
+        model: openai/gpt-4o-mini
+        # The NAME of an environment variable your real API key is set
+        # in separately (e.g. `export DASHCAM_SENTINEL_LLM_API_KEY=sk-...`)
+        # -- never the key itself. Putting the actual key here directly is
+        # a real, observed mistake: it sits in plaintext in this file and
+        # gets echoed to your logs on every failed lookup. `gaggle`
+        # warns at startup if this doesn't look like a variable name.
+        api_key_env_var: DASHCAM_SENTINEL_LLM_API_KEY
+        timeout_seconds: 30.0
+      # Cross-modality co-occurrence grouping (face+plate+voice+vehicle
+      # observations close together in time within one clip): on by
+      # default, zero extra cost beyond what face/plate/voice/vehicle
+      # enrichment already computed. Makes no spatial-correspondence
+      # claim -- see docs/limitations.md.
+      encounters:
+        enabled: true
+    lifecycle:
+      # Classify every clip as reviewable/benign right after analyze(),
+      # moving benign originals into pending_deletion/ automatically.
+      # Nothing is ever deleted without an explicit `triage confirm-deletion`.
+      auto_triage_after_analyze: true
+      benign_requires_zero_signals: true
+    scoring:
+      low_threshold: 0.20
+      medium_threshold: 0.50
+      high_threshold: 0.80
+    storage:
+      hash_algorithm: sha256
+      set_read_only: true
+      # copy (default, safest) | move (frees the source immediately) |
+      # reference (index in place, zero extra disk use -- see
+      # docs/local-ai.md's "Choosing an ingest storage mode" before using
+      # this for anything you can't re-ingest later). Override per-run
+      # with `ingest --mode`.
+      ingest_mode: copy
+      # Skip re-copying a file whose content hash already matches an
+      # already-ingested clip -- keeps repeat/overlapping ingests
+      # (e.g. re-pointing at the same SD card) from duplicating storage.
+      dedupe_on_ingest: true
+    signing:
+      # Optional Ed25519 cryptographic signing of the event revision hash
+      # chain, for tamper-evidence beyond the hash chain alone -- off by
+      # default, fully offline when enabled. Requires the `signing` extra
+      # and a one-time `gaggle workspace signing-init`. See
+      # docs/local-ai.md's "Cryptographic signing" section.
+      enabled: false
+
+  # Example of a stricter profile for noisier environments -- select with
+  # `active_profile: quiet_environment` or DASHCAM_SENTINEL__ACTIVE_PROFILE.
+  quiet_environment:
+    detection:
+      motion_threshold: 0.30
+      audio_spike_threshold: 0.55
+      min_signal_duration_seconds: 1.0
+    scoring:
+      low_threshold: 0.25
+      medium_threshold: 0.55
+      high_threshold: 0.85

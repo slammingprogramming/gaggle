@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions / usage help
+    url: https://github.com/slammingprogramming/gaggle/discussions
+    about: Ask a question or discuss usage before filing a bug.
+  - name: Security vulnerability
+    url: https://github.com/slammingprogramming/gaggle/security/policy
+    about: Read SECURITY.md before reporting a vulnerability -- do not file a public bug report for it.

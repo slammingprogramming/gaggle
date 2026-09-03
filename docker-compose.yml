@@ -1,0 +1,23 @@
+services:
+  # Long-running review UI, reachable at http://localhost:8000
+  review-ui:
+    build:
+      context: .
+    volumes:
+      - ./workspace:/workspace
+      - ./examples:/examples:ro
+    command: ["review-ui", "--workspace", "/workspace", "--host", "0.0.0.0", "--port", "8000"]
+    ports:
+      - "8000:8000"
+
+  # One-off CLI invocations against the same workspace, e.g.:
+  #   docker compose run --rm cli ingest /examples/sample_media --workspace /workspace
+  #   docker compose run --rm cli analyze --workspace /workspace
+  cli:
+    build:
+      context: .
+    volumes:
+      - ./workspace:/workspace
+      - ./examples:/examples:ro
+    profiles: ["cli"]
+    entrypoint: ["gaggle"]

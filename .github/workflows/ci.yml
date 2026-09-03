@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install ffmpeg and tesseract
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg tesseract-ocr
+      - name: Install project
+        run: pip install -e .[dev,vision,cloud]
+      - name: Ruff (lint)
+        run: ruff check .
+      - name: Ruff (format check)
+        run: ruff format --check .
+      - name: Mypy
+        run: mypy src
+      - name: Pytest
+        run: pytest --cov=gaggle --cov-report=term-missing
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build -t gaggle:ci .
+      - name: Smoke test CLI entrypoint
+        run: docker run --rm gaggle:ci --help

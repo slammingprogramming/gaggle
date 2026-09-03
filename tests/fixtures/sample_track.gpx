@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+Synthetic but well-formed GPX 1.1 track with deliberately constructed
+ground truth, used by tests/unit/test_telemetry_analysis.py to verify
+detection/telemetry_analysis.py against known values (see that test file
+for the exact generation script and expected speed/heading/event
+numbers): a 5-second cruise north at 15 m/s, a 2-step hard-braking
+sequence down to 2 m/s, a sharp 90-degree turn to due east, then a speed
+spike up to 25 m/s. Every point's lat/lon was computed with the
+great-circle destination-point formula (the exact inverse of the
+haversine distance / initial-bearing formulas this module implements),
+so re-deriving speed/heading from these points should recover the
+intended values to floating-point precision, not just approximately.
+-->
+<gpx version="1.1" creator="gaggle-test-fixture" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>synthetic cruise-brake-turn-spike track</name>
+    <trkseg>
+      <trkpt lat="37.00000000" lon="-122.00000000"><time>2026-05-12T12:00:00Z</time></trkpt>
+      <trkpt lat="37.00013490" lon="-122.00000000"><time>2026-05-12T12:00:01Z</time></trkpt>
+      <trkpt lat="37.00026980" lon="-122.00000000"><time>2026-05-12T12:00:02Z</time></trkpt>
+      <trkpt lat="37.00040469" lon="-122.00000000"><time>2026-05-12T12:00:03Z</time></trkpt>
+      <trkpt lat="37.00053959" lon="-122.00000000"><time>2026-05-12T12:00:04Z</time></trkpt>
+      <trkpt lat="37.00067449" lon="-122.00000000"><time>2026-05-12T12:00:05Z</time></trkpt>
+      <trkpt lat="37.00074644" lon="-122.00000000"><time>2026-05-12T12:00:06Z</time></trkpt>
+      <trkpt lat="37.00076442" lon="-122.00000000"><time>2026-05-12T12:00:07Z</time></trkpt>
+      <trkpt lat="37.00076442" lon="-121.99997748"><time>2026-05-12T12:00:08Z</time></trkpt>
+      <trkpt lat="37.00076442" lon="-121.99969596"><time>2026-05-12T12:00:09Z</time></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
