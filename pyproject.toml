@@ -45,7 +45,7 @@ dev = [
   # Found via a real CI failure: this project's own dependency pins
   # don't constrain fastapi/starlette tightly enough to catch this at
   # `pip install` time, only at test-collection time.
-  "httpx2>=2.0.0,<3.0.0",
+  "httpx2>=2.12.0,<3.0.0",
   # Major version bump (1.x -> 2.x) -- verified locally with a fresh
   # install and a real `mypy src` run before bumping the ceiling.
   "mypy>=2.3.1,<3.0.0",
