@@ -29,6 +29,13 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "hypothesis>=6.112.0,<7.0.0",
+  # Not imported directly anywhere in this project -- starlette's
+  # TestClient (used by tests/unit/test_review_ui.py to exercise the
+  # FastAPI review UI) requires it transitively as of starlette 1.x.
+  # Found via a real CI failure: this project's own dependency pins
+  # don't constrain fastapi/starlette tightly enough to catch this at
+  # `pip install` time, only at test-collection time.
+  "httpx2>=2.0.0,<3.0.0",
   "mypy>=1.11.1,<2.0.0",
   "pre-commit>=3.8.0,<4.0.0",
   "pytest>=8.3.2,<9.0.0",
@@ -185,5 +192,7 @@ module = [
   "fast_alpr",
   "fast_alpr.*",
   "sherpa_onnx",
+  "cryptography",
+  "cryptography.*",
 ]
 ignore_missing_imports = true
