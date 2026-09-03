@@ -90,7 +90,7 @@ transcription = [
 # LLM server). Entirely opt-in -- see docs/local-ai.md and
 # enrichment/llm_analysis.py.
 cloud = [
-  "requests>=2.32.0,<3.0.0",
+  "requests>=2.34.2,<3.0.0",
 ]
 # Ed25519 cryptographic signing of the event revision hash chain
 # (`workspace signing-init`, `signing.enabled`). Fully offline; no network
