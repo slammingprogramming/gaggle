@@ -72,7 +72,7 @@ plate_recognition = [
 # one-time, user-initiated model download (see docs/local-ai.md); runs
 # fully offline afterward.
 transcription = [
-  "faster-whisper>=1.0.3,<2.0.0",
+  "faster-whisper>=1.2.1,<2.0.0",
 ]
 # Optional online enrichment: sends transcript TEXT (never video/audio) to
 # a user-configured OpenAI-compatible endpoint (e.g. OpenRouter, a local
