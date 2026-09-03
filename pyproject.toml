@@ -12,7 +12,7 @@ license = "AGPL-3.0-or-later"
 authors = [{ name = "SlammingProgramming and contributors" }]
 dependencies = [
   "alembic>=1.13,<2.0.0",
-  "fastapi>=0.115.0,<1.0.0",
+  "fastapi>=0.141.1,<1.0.0",
   "numpy>=1.26.0,<3.0.0",
   "opencv-contrib-python-headless>=4.10.0,<5.0.0",
   "platformdirs>=4.0,<5.0.0",
