@@ -83,7 +83,7 @@ vision = [
 # onnxruntime-gpu is installed in place of the CPU package. See
 # docs/local-ai.md.
 face_recognition = [
-  "insightface>=0.7.3,<1.0.0",
+  "insightface>=1.0.1,<2.0.0",
   "onnx>=1.16.0,<2.0.0",
   "onnxconverter-common>=1.14.0,<2.0.0",
   "onnxruntime>=1.29.0,<2.0.0",
