@@ -4,6 +4,13 @@ on:
   push:
   pull_request:
 
+# Least-privilege default for the auto-issued GITHUB_TOKEN: this workflow
+# only ever checks out code, installs dependencies, and runs local lint/
+# test/build steps -- it never writes to the repo, comments on issues/PRs,
+# or publishes anything, so read-only `contents` is all either job needs.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
