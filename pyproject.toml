@@ -38,7 +38,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "hypothesis>=6.112.0,<7.0.0",
+  "hypothesis>=6.167.1,<7.0.0",
   # Not imported directly anywhere in this project -- starlette's
   # TestClient (used by tests/unit/test_review_ui.py to exercise the
   # FastAPI review UI) requires it transitively as of starlette 1.x.
