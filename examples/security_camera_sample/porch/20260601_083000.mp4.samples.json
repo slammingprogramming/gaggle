@@ -1,0 +1,18 @@
+{
+  "motion_series": [
+    { "offset_seconds": 2.0, "value": 0.55 },
+    { "offset_seconds": 4.5, "value": 0.12 }
+  ],
+  "audio_rms_series": [
+    { "offset_seconds": 2.1, "value": 0.15 }
+  ],
+  "object_hints": [
+    {
+      "label": "person",
+      "confidence": 0.68,
+      "start_offset_seconds": 1.8,
+      "end_offset_seconds": 3.2,
+      "bbox": [0.3, 0.25, 0.15, 0.5]
+    }
+  ]
+}

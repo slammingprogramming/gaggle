@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "review-ui",
+      "runtimeExecutable": "gaggle",
+      "runtimeArgs": [
+        "review-ui",
+        "--workspace",
+        "./workspace",
+        "--port",
+        "8123"
+      ],
+      "port": 8123
+    }
+  ]
+}

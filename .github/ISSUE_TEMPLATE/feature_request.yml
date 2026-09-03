@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest an idea, capability, or improvement.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What are you trying to do that Gaggle doesn't support today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed approach
+      description: >-
+        If you have one in mind. See `docs/architecture.md` and
+        `docs/plugin-authoring.md` if this might fit as a plugin
+        (detector, inference rule, exporter, review extension) instead of
+        a core change.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
