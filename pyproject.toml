@@ -33,7 +33,18 @@ dev = [
   "pre-commit>=3.8.0,<4.0.0",
   "pytest>=8.3.2,<9.0.0",
   "pytest-cov>=5.0.0,<6.0.0",
-  "ruff>=0.6.2,<1.0.0",
+  # Exact-pinned, not a range: ruff's formatter is explicitly not
+  # guaranteed stable across even minor pre-1.0 releases, and this
+  # project has no lock file -- a loose range let local dev (an older
+  # cached ruff) and CI (always resolves the newest version satisfying
+  # the range, fresh every run) silently drift apart, which is exactly
+  # what caused a real CI failure (ruff format --check flagging
+  # Markdown-embedded Python code fences that an older ruff didn't
+  # reformat at all) despite `ruff format --check .` passing locally.
+  # Bump this deliberately, verify locally with the new version, and
+  # bump ruff-pre-commit's `rev` in .pre-commit-config.yaml to match in
+  # the same change.
+  "ruff==0.16.5",
   "types-requests>=2.32.0,<3.0.0",
 ]
 # Local YOLO-style object/vehicle detection via a user-supplied ONNX model
