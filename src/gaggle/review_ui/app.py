@@ -618,6 +618,7 @@ def _render_recognition_clusters_page(
     label_noun = {"face": "face", "vehicle_appearance": "vehicle", "person_appearance": "person"}[
         entity_type
     ]
+    escaped_entity_type = html.escape(entity_type)
     unreviewed_count = sum(1 for c in clusters if not c["reviewed"])
     cards = "".join(_render_cluster_card(entity_type, cluster) for cluster in clusters)
     return f"""<html><head><title>gaggle recognition review -- {label_noun}s</title>
@@ -631,8 +632,9 @@ real {label_noun} at all -- see docs/local-ai.md's "Reviewing and reclaiming rec
 storage" section. Reviewing never deletes anything by itself; a purge sweep does that
 afterward.</p>
 <p>
-<button data-purge-sweep="{entity_type}" data-dry-run="true">Preview purge (dry run)</button>
-<button data-purge-sweep="{entity_type}" data-dry-run="false">Run purge sweep</button>
+<button data-purge-sweep="{escaped_entity_type}" data-dry-run="true">
+Preview purge (dry run)</button>
+<button data-purge-sweep="{escaped_entity_type}" data-dry-run="false">Run purge sweep</button>
 <span id="purge-result"></span>
 </p>
 <div class="clusters">{cards}</div>
@@ -653,6 +655,34 @@ def _render_suggestion_item(s: dict[str, object]) -> str:
     )
 
 
+def _render_crop_item(
+    o: dict[str, object],
+    escaped_entity_type: str,
+    reject_noun: str,
+    representative_ids: set[str],
+) -> str:
+    observation_id = html.escape(cast(str, o["observation_id"]))
+    return f"""<div class="crop-item">
+<label><input type="checkbox" data-representative-checkbox
+value="{observation_id}"
+{"checked" if o["observation_id"] in representative_ids else ""}>
+<img class="crop" loading="lazy"
+src="/api/recognition/{escaped_entity_type}/observations/{observation_id}/crop"
+alt="{escaped_entity_type} crop"></label>
+<div class="crop-meta">{html.escape(cast(str, o["camera_id"]))}
+&middot; {html.escape(cast(str, o["review_status"]))}</div>
+<button data-reject-observation="{observation_id}"
+data-entity-type="{escaped_entity_type}">not a {reject_noun}</button>
+<button data-detach-observation="{observation_id}"
+data-entity-type="{escaped_entity_type}"
+title="remove from this cluster entirely, without still counting it toward it">detach</button>
+<input type="text" data-move-target-input
+placeholder="target cluster id" size="10">
+<button data-move-observation="{observation_id}"
+data-entity-type="{escaped_entity_type}">move</button>
+</div>"""
+
+
 def _render_cluster_card(entity_type: ClusterEntityType, cluster: dict[str, object]) -> str:
     cluster_id = cast(str, cluster["cluster_id"])
     label = cast(str | None, cluster["label"])
@@ -661,26 +691,10 @@ def _render_cluster_card(entity_type: ClusterEntityType, cluster: dict[str, obje
     observations = cast(list[dict[str, object]], cluster["observations"])
     suggestions = cast(list[dict[str, object]], cluster["suggestions"])
 
+    escaped_entity_type = html.escape(entity_type)
+    reject_noun = "face" if entity_type == "face" else "vehicle"
     crop_items = "".join(
-        f"""<div class="crop-item">
-<label><input type="checkbox" data-representative-checkbox
-value="{html.escape(cast(str, o["observation_id"]))}"
-{"checked" if o["observation_id"] in representative_ids else ""}>
-<img class="crop" loading="lazy"
-src="/api/recognition/{entity_type}/observations/{html.escape(cast(str, o["observation_id"]))}/crop"
-alt="{entity_type} crop"></label>
-<div class="crop-meta">{html.escape(cast(str, o["camera_id"]))}
-&middot; {html.escape(cast(str, o["review_status"]))}</div>
-<button data-reject-observation="{html.escape(cast(str, o["observation_id"]))}"
-data-entity-type="{entity_type}">not a {("face" if entity_type == "face" else "vehicle")}</button>
-<button data-detach-observation="{html.escape(cast(str, o["observation_id"]))}"
-data-entity-type="{entity_type}"
-title="remove from this cluster entirely, without still counting it toward it">detach</button>
-<input type="text" data-move-target-input
-placeholder="target cluster id" size="10">
-<button data-move-observation="{html.escape(cast(str, o["observation_id"]))}"
-data-entity-type="{entity_type}">move</button>
-</div>"""
+        _render_crop_item(o, escaped_entity_type, reject_noun, representative_ids)
         for o in observations
     )
 
@@ -688,7 +702,7 @@ data-entity-type="{entity_type}">move</button>
     label_value = html.escape(label or "")
 
     return f"""<div class="cluster-card {"reviewed" if reviewed else ""}"
-data-cluster-id="{html.escape(cluster_id)}" data-entity-type="{entity_type}">
+data-cluster-id="{html.escape(cluster_id)}" data-entity-type="{html.escape(entity_type)}">
 <h3>{html.escape(cluster_id)[:8]} {f"&mdash; {html.escape(label)}" if label else ""}
 <span class="badge">{"reviewed" if reviewed else "needs review"}</span></h3>
 <div class="crops">{crop_items}</div>
@@ -722,14 +736,14 @@ def _render_camera_video(event_id: UUID, artifact_index: int, artifact: Artifact
 
 
 def _crop_img_tag(event_id: UUID, entity_type: str, observation_id: str) -> str:
-    src = f"/api/events/{event_id}/crop/{entity_type}/{observation_id}"
+    src = f"/api/events/{event_id}/crop/{html.escape(entity_type)}/{observation_id}"
     return f"<img class='crop' src='{src}' loading='lazy' alt='{html.escape(entity_type)} crop'>"
 
 
 def _render_reject_observation_button(entity_type: str, observation_id: str, noun: str) -> str:
     return (
         f'<button data-reject-observation-inline="{html.escape(observation_id)}" '
-        f'data-entity-type="{entity_type}">not a {noun}</button>'
+        f'data-entity-type="{html.escape(entity_type)}">not a {noun}</button>'
     )
 
 
