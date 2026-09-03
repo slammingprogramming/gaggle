@@ -5,6 +5,18 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      # opencv-contrib-python-headless 5.0.0 stopped bundling the Haar
+      # cascade XML data files (cv2/data/ ships empty except
+      # __init__.py) -- confirmed for real, not assumed. That breaks
+      # this project's zero-setup classical face/plate detection
+      # fallback (enrichment/face.py, enrichment/plate.py). See
+      # pyproject.toml's own comment on this dependency for the same
+      # explanation. Remove this ignore rule once upstream restores the
+      # data (or this project vendors it) and the bump has been
+      # re-verified for real, not just because a new PR shows up.
+      - dependency-name: "opencv-contrib-python-headless"
+        versions: [">=5.0.0"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
