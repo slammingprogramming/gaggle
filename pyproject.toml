@@ -65,7 +65,7 @@ dev = [
   # Bump this deliberately, verify locally with the new version, and
   # bump ruff-pre-commit's `rev` in .pre-commit-config.yaml to match in
   # the same change.
-  "ruff==0.16.5",
+  "ruff==0.16.6",
   "types-requests>=2.32.0,<3.0.0",
 ]
 # Local YOLO-style object/vehicle detection via a user-supplied ONNX model
