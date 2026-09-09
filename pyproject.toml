@@ -49,7 +49,7 @@ dev = [
   # Major version bump (1.x -> 2.x) -- verified locally with a fresh
   # install and a real `mypy src` run before bumping the ceiling.
   "mypy>=2.3.1,<3.0.0",
-  "pre-commit>=3.8.0,<4.0.0",
+  "pre-commit>=4.6.2,<5.0.0",
   "pytest>=8.3.2,<9.0.0",
   # Ceiling raised across two majors (5.x -> 7.x) -- verified locally
   # with a fresh install and a full `pytest --cov` run before bumping.
