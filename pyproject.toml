@@ -124,7 +124,7 @@ cloud = [
 # (`workspace signing-init`, `signing.enabled`). Fully offline; no network
 # access needed at any point. See docs/local-ai.md.
 signing = [
-  "cryptography>=43.0.0,<50.0.0",
+  "cryptography>=50.0.1,<51.0.0",
 ]
 # Local, offline audio-event classification (`detection.gunshot.enabled`)
 # via a downloaded ONNX model (k2-fsa's zipformer-small audio tagger,
