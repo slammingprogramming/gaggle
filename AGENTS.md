@@ -4,7 +4,13 @@ Working reference for anyone -- human or AI agent -- developing
 `gaggle`. Read this before making structural changes. It covers
 what the project is, the invariants that must never be violated, how to
 build/test/run it, what's actually implemented as of this pass, and what's
-still open.
+still open. This file is written to be a complete pick-up-and-put-down
+point: a fresh agent (or the same one, in a new session) with no other
+context should be able to read this, `docs/`, and the code, and continue
+the work correctly -- including publishing to GitHub without leaking
+anything private or breaking a real user's production workspace.
+**If you're about to touch a git remote, read "Public release" below
+first** -- this repo pushes to two places with very different rules.
 
 ## What this project is
 
@@ -28,6 +34,193 @@ sources does not change this -- it's still local-only, user-controlled,
 and scoped to a person's own footage (see invariant 11 and
 `docs/forensic-considerations.md`'s "Recognition data: scope and intent"),
 never identity resolution or networked lookup.
+
+## Public release: keybase (private) + GitHub (public)
+
+**Read this before touching any git remote.** This repo has lived a dual
+existence since the 1.11 pass: a private keybase repo with the full real
+development history, and a public GitHub repo with a deliberately
+curated/fresh history. Getting this wrong risks either leaking something
+private or breaking a workflow the user relies on -- treat every step here
+as load-bearing, not a style preference.
+
+**Remotes and branches:**
+
+- `origin` -> `keybase://team/teamopensource/gaggle` (private). The
+  `master` branch tracks it and carries the full, real, unedited commit
+  history. The user has given standing pre-authorization to push/commit
+  here freely -- no need to ask before pushing to `origin`/`master`.
+- `github` -> `git@github.com:slammingprogramming/gaggle.git` (public,
+  under the `slammingprogramming` account). The `public-release` branch
+  tracks its `main`. This branch's history is **not** a mirror of
+  `master` -- it started from the user's own pre-existing `FUNDING.yml`
+  commit plus one squashed "Initial public release" commit (not this
+  project's full private history), and every publish since then has been
+  a new commit layered on top, built by copying `master`'s current tree
+  over wholesale (see "Publishing a change" below), not a rebase/merge of
+  individual commits.
+- **Never push to GitHub without explicit permission from the user, every
+  time** -- this is a standing, absolute rule, not a one-time
+  confirmation. Freely prepare/verify/commit on `master` and even on
+  `public-release` locally; the actual `git push github ...` step needs a
+  clear go-ahead. (In practice, once the user has established an ongoing
+  authorized pattern in the current conversation -- e.g. "handle the
+  dependabot PRs," "fix the CI" -- continuing that same pattern across
+  several follow-up pushes in the same session doesn't require re-asking
+  for each one; a new category of change, or a new session, does.)
+
+**Publishing a change from `master` to the public repo:**
+
+```bash
+git switch public-release
+git checkout master -- .          # brings master's full current tree over
+# --- audit before committing, every time, no exceptions ---
+git diff --cached | grep -iE "natur|keybase|password|secret|api.?key"   # adjust the pattern to whatever's relevant
+git commit -m "..."                # auto-signed, see below
+git push github public-release:main
+git switch master
+```
+
+Then confirm the real GitHub Actions run went green (see "No `gh` CLI"
+below) before considering the publish done -- a push that breaks CI is
+not finished.
+
+**PII/leak audit discipline.** Before the *first* publish, this repo's
+entire history and working tree were audited line by line for personal
+data -- real Windows paths/usernames, emails, credentials, private-repo
+references. Exactly one real leak was found: `.claude/launch.json` had a
+real Windows username baked into a smoke-test path, present since the
+repo's very first commit and never touched since (fixed; genericized).
+Everything else -- commit messages, code, docs, the sample face photo
+(`tests/fixtures/sample_face.jpg`, the public-domain Grace Hopper Navy
+photo), the sample GPS track (synthetic, round-number coordinates) --
+came back clean. That one real leak is why every subsequent publish
+re-runs a quick grep sweep on the diff before committing: it's cheap
+insurance against exactly the kind of thing that already happened once.
+If you ever add something to the repo that embeds a real local path,
+hostname, or personal identifier (a new fixture, a new dev-tooling config
+file, a debug script left behind), assume it will eventually reach
+`public-release` and scrub it before it does, not after.
+
+**SSH auth and commit signing (GitHub-specific, repo-local config, not
+global).** GitHub access uses an SSH key held in a Bitwarden-backed SSH
+agent, reachable only through the **Windows** OpenSSH client -- not the
+one bundled with Git for Windows/git-bash, which cannot see that agent.
+Every git-for-GitHub operation must go through
+`C:\Windows\System32\OpenSSH\ssh.exe` (`/c/Windows/System32/OpenSSH/ssh.exe`
+from git-bash). This repo already has the following set **locally**
+(`git config --local ...`, deliberately not global, so it doesn't affect
+other projects on the same machine):
+
+```
+core.sshCommand = C:/Windows/System32/OpenSSH/ssh.exe
+gpg.format = ssh
+user.signingkey = ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIHSyg1EK6pjVGJaDawe37NFKpL9sasrvGU/NLz7I73M
+commit.gpgsign = true
+```
+
+The signing key above is the GitHub *signing* key (public, safe to
+record here -- it's already embedded in every signed commit on GitHub
+anyway). There is a **separate** GitHub *auth* key,
+`ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHBimzZGRT6NuAlr5PFhLgQn9TL9/0XEt9RYFzu/2eE7`,
+used only for git transport (clone/fetch/push), never for signing. Both
+should show up in `ssh-add -L` run through the Windows OpenSSH client
+(`/c/Windows/System32/OpenSSH/ssh-add.exe -L`) if the Bitwarden agent is
+unlocked and reachable -- that agent also serves several other,
+unrelated personal keys; only these two are relevant to this project,
+and neither this file nor any commit should ever enumerate the others.
+`commit.gpgsign = true` means **every** commit in this repo gets signed
+now, including ones that only ever go to keybase -- the user has said
+that's fine (only pushing to GitHub with the *auth* key is restricted,
+signing with the *signing* key is fine everywhere). If a commit fails
+with a signing error, the agent is probably locked/unreachable -- that's
+an environment problem to flag to the user, not something to work around
+with `--no-gpg-sign`.
+
+Test connectivity for real before trusting it after any environment
+change: `/c/Windows/System32/OpenSSH/ssh.exe -T git@github.com` (exit
+code 1 with a "successfully authenticated" message is the expected
+*success* response -- GitHub always refuses shell access). Verify a
+signed commit landed correctly with `git log --show-signature -1`,
+looking for `Good "git" signature`.
+
+**No `gh` CLI is installed in this environment.** GitHub interactions go
+through direct `curl` calls to the unauthenticated public REST API
+(`https://api.github.com/repos/slammingprogramming/gaggle/...`) -- this
+works fine for *reading* public data (issues, PRs, Actions run/job
+status and step-level results) but cannot merge/close/comment on PRs,
+read code-scanning alerts, or download job logs (all return 401/403
+without a token this environment doesn't have). When that happens,
+surface the exact thing to the user for them to do in the GitHub UI
+rather than trying to work around the missing auth. A typical CI-status
+check looks like:
+
+```bash
+curl -s "https://api.github.com/repos/slammingprogramming/gaggle/actions/runs?branch=main&event=push&per_page=1"
+curl -s "https://api.github.com/repos/slammingprogramming/gaggle/actions/runs/<id>/jobs"   # per-step results
+```
+
+Note that CodeQL scanning runs as a separate, GitHub-managed "default
+setup" workflow (`dynamic/github-code-scanning/codeql` in
+`GET /repos/.../actions/workflows`) -- there is no `codeql.yml` file
+checked into this repo to look for; it exists purely on GitHub's side.
+Its own runs show up in the same `actions/runs` listing as `ci.yml`'s.
+
+**Verifying a dependency bump before merging it -- never trust a
+long-lived local dev venv.** This environment's own Python installation
+accumulates packages across unrelated work over time (other projects,
+earlier ad-hoc installs), which has twice masked a real gap that only
+showed up once tested in a genuinely fresh environment (a missing
+`cryptography` mypy-override entry, and the real risk profile of an
+`insightface` major-version bump). The standing discipline now: build a
+throwaway venv, `pip install -e ".[dev,vision,cloud]"` (matching CI's own
+install command exactly, or whatever extra combination is relevant),
+and run `ruff check`/`ruff format --check`/`mypy src`/`pytest` there --
+never assume "it works on my machine" transfers. For a *major* version
+bump specifically (a dependency's upper bound changing, not just its
+floor), that baseline isn't enough either: check real PyPI wheel
+availability first for anything platform/Python-version sensitive
+(`https://pypi.org/pypi/<package>/<version>/json`, looking for
+`manylinux`/`abi3` wheels), and for anything touching a subsystem with
+real prior fragility (opencv's Haar cascade data, insightface's torch
+import chain, onnxruntime's CUDA providers), do a genuine end-to-end
+functional test of that specific subsystem, not just "tests pass." This
+is exactly how `opencv-contrib-python-headless` 5.x got caught and
+rejected (see below) and how `insightface` 1.x got a real AuraFace
+embedding run before being accepted.
+
+**`opencv-contrib-python-headless` is deliberately capped below 5.0.0 --
+do not bump this without re-verifying from scratch.** Real testing (a
+fresh venv, not assumed) found that 5.0.0 no longer bundles the Haar
+cascade XML data files at all (`cv2/data/` ships with only
+`__init__.py`) -- a silent regression that would break the zero-setup
+classical face/plate detection fallback (`enrichment/face.py`,
+`enrichment/plate.py`'s `cv2.data.haarcascades` lookup) this project
+depends on always working with no extras installed. `pyproject.toml`'s
+dependency line and `.github/dependabot.yml`'s `ignore` rule both carry
+the same explanation inline. Revisit only if upstream restores the data
+(or this project vendors it), with a fresh real test, not because a new
+dependabot PR shows up.
+
+**`SECURITY.md`'s disclosure process is intentionally two-step, not the
+GitHub-default "private vulnerability reporting."** A reporter opens a
+detail-free GitHub issue (the `security_report.yml` template enforces
+this) *and* connects over SimpleX Chat at the address in that file; both
+sides then exchange signed messages referencing the issue to verify each
+other's identity before any technical detail is discussed, entirely over
+the verified SimpleX connection. This exists to link a report to a real,
+verifiable identity (useful for credit/CVE coordination) while never
+putting vulnerability details on any public channel, and so a reporter
+only has to do the handshake once. Don't "simplify" this to a plain
+email/GitHub-private-reporting flow without checking with the user first
+-- the two-step shape is deliberate, not an oversight.
+
+**Version numbering.** `pyproject.toml`'s `version` field is kept in
+sync with this document's own internal pass numbering (it had drifted
+badly stale -- `1.3.0` in the package metadata while this file's own
+narrative was already at "1.10" -- and was corrected to `1.10.0` during
+the public-release prep). Bump it to match whenever you add a new
+`(1.N)` pass marker below.
 
 ## Repo history context (read this once, then ignore it)
 
@@ -971,9 +1164,19 @@ CI (`.github/workflows/ci.yml`) runs all of the above (installing
 `ffmpeg`+`tesseract-ocr` and the `vision`/`cloud` extras so those tests run
 for real rather than skipping; `transcription` is left out of CI by design
 -- it's heavy and gracefully degrades, so CI verifies the fallback path
-instead) plus a Docker build + smoke test. Pre-commit
+instead) plus a Docker build + smoke test, with an explicit least-
+privilege `permissions: contents: read` at the workflow level. Pre-commit
 (`.pre-commit-config.yaml`) runs ruff (lint + format) and mypy on `src/` on
-every commit if installed (`pre-commit install`).
+every commit if installed (`pre-commit install`) -- its hook `rev`s are
+kept in sync with the exact versions `pyproject.toml` pins (`ruff`,
+`mypy`), not left to drift independently.
+
+**Before trusting a local "it works," especially after touching a
+dependency version:** this environment's own long-lived Python
+installation is not a reliable stand-in for CI -- see the "Public
+release" section above's "Verifying a dependency bump" callout for why,
+and build a fresh venv with CI's exact install command instead when in
+doubt.
 
 ## Status tracker
 
@@ -1041,6 +1244,9 @@ deliverables, as of this pass.
 | Review-UI/CLI ergonomics pass (shutdown hang, form position, default actor, plate review parity, cluster detach/move, event split, manual sync offset) | Done (1.10) -- real user punch-list, not speculative: bounded `timeout_graceful_shutdown` fixes a review-ui Ctrl+C hang; the review-action form moved to the top of the event-detail page; `core/cli_config.py` + `gaggle config set-actor`/`show` let every `--actor`-taking command (23 of them) resolve a per-machine default instead of retyping a name every time; plate observations gained "not a plate"/text-correction review-ui controls (the service layer already supported this, only surfacing was missing); `RecognitionService.detach_observation`/`move_observation` (new, cluster-count-recomputing, logged) fix the "false positive stuck in the wrong cluster" gap; `core/events.py::EventSplitService.split_event` + `gaggle events split` let a human correct a wrongly-merged multi-camera event (root-caused to `normalize/sync.py`'s pure time-overlap heuristic having no camera/duration-similarity check) without editing the original event, which is preserved and marked `superseded_by_event_ids`; `sync.manual_offset_overrides` lets a per-camera timing correction apply to future `analyze` runs. Verified via real CLI smoke tests and a real browser session against the user's own (since-reset) production workspace. |
 | Pedestrian/full-body appearance re-identification | Done (1.10) -- `enrichment/person_appearance.py`, a structural near-copy of `vehicle_appearance.py` (same classical hue/saturation-histogram + aspect-ratio fingerprint technique), surfacing YOLO's already-present COCO "person" class detections as a first-class, re-identifiable signal rather than only feeding vehicle-appearance fingerprinting. Structured attributes only (`dominant_hue_bin`, `height_to_frame_ratio` in `reasoning_metadata`), explicitly never a learned face embedding or an AI-generated description -- a considered, user-confirmed scope decision. YOLO-only detection, no classical fallback (unlike vehicle-appearance) and off by default for that reason. Full CLI (`recognize persons-*`)/review-UI/cluster-management (detach/move/merge-suggestions) parity with vehicle-appearance. Migration `0005_person_appearance` verified against the real workspace's SQLite index (zero-rebuild upgrade). |
 | Gunshot/gunfire detection | Done (1.10) -- researched two real approaches (a classical rise-time/crest-factor impulse heuristic vs. a pretrained ONNX audio classifier) and reported a concrete recommendation before writing any code, per explicit user instruction; the user chose the classifier path. `detection/gunshot_analysis.py` (model prep + windowed classification) + `detection/gunshot.py` (`GunshotDetector`, `analyze`-time, unlike enrichment recognition which never affects scoring) via the new optional `sherpa-onnx` dependency (Apache-2.0, k2-fsa's zipformer-small AudioSet tagger, license/hash verified against the real downloaded archive, not assumed) -- off by default, degrades gracefully if the extra isn't installed. New `inference/service.py` rules (`isolated_gunshot_retention` capped at 0.60, `gunshot_plus_motion` for cross-modality corroboration) so a lone classifier opinion can never alone reach medium/high severity (invariant 7). Verified for real: downloaded and hash-checked the real model, inspected its real ONNX I/O contract, ran real inference against the model's own bundled real-world test clips (zero false "gunshot-like" matches on cat/dog/siren/baby-cry/etc.) -- but no real or synthetic gunshot audio existed in this environment to validate a true positive, honestly documented as such. The automated test suite mocks the network/model entirely (this sandbox has no network access), exercising the real windowing/threshold/hash-verification logic against a fake tagger and a fake archive instead. |
+| GitHub public release (dual-repo: private keybase + public GitHub) | Done (1.11) -- see the "Public release" section above for the full workflow, SSH/signing setup, and PII-audit discipline. `keybase://team/teamopensource/gaggle` stays the full-history private repo (`origin`/`master`); `github.com/slammingprogramming/gaggle` gets a deliberately curated/fresh history via a `public-release` branch (`github`/`main`). A full audit before the first publish found and fixed exactly one real leak (a Windows username in `.claude/launch.json`, present since the repo's first commit); everything else -- history, fixtures, code, docs -- came back clean. Added the standard GitHub community files: `LICENSE` (replaced a notice-only stub with the full verbatim AGPL-3.0 text), `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `CHANGELOG.md`, `.github/ISSUE_TEMPLATE/*`, `.github/PULL_REQUEST_TEMPLATE.md`, `.github/dependabot.yml`, and README badges. License changed `AGPL-3.0-only` -> `AGPL-3.0-or-later`. |
+| CI + security hardening | Done (1.11) -- two real CI failures found and fixed by reproducing in a fresh venv rather than guessing, both on the very first real CI run this code had ever been through: a ruff version drift (no lock file meant local dev's cached `ruff` and CI's freshly-resolved one silently diverged; a newer ruff reformats Python code fences embedded in Markdown, and `AGENTS.md`/`docs/plugin-authoring.md` were stale relative to it -- fixed by reformatting them and pinning `ruff==0.16.5` exactly instead of a range), and two dependency-declaration gaps that had simply never been exercised (`cryptography`, backing the `signing` extra CI never installs, was the one optional-extra module missing from `[[tool.mypy.overrides]]`; starlette 1.x's `TestClient`, used by `tests/unit/test_review_ui.py`, needs a real PyPI package literally named `httpx2`, never declared). Also fixed 3 CodeQL alerts: unescaped `entity_type` interpolation at several points in `review_ui/app.py` (defense-in-depth -- the value was already constrained to 3 safe literals upstream, but CodeQL's static analysis couldn't prove that, and the codebase's own convention is to escape everywhere regardless), and both `.github/workflows/ci.yml` jobs missing an explicit least-privilege `permissions: contents: read`. |
+| Dependency updates (dependabot) | Done (1.11) -- two rounds, 23 PRs total, every one individually verified in a fresh venv matching CI's exact install command rather than merged blindly (numpy, fastapi, pydantic, onnxruntime, mypy 1.x->2.x, platformdirs, pyyaml, requests, faster-whisper, typer, httpx2, hypothesis, sherpa-onnx, uvicorn, pydantic-settings, sqlalchemy, scipy, plus GitHub Actions/Docker base image bumps). One PR (`opencv-contrib-python-headless` 4.x -> 5.x) was deliberately rejected -- see the dedicated callout in the "Public release" section above -- with a `.github/dependabot.yml` ignore rule so it stops recurring. Two other ceiling-raising major bumps got real end-to-end functional verification beyond "tests pass": `pytest-cov` 5.x -> 7.x (fresh install + full `pytest --cov` run) and `insightface` 0.x -> 1.x (a genuine AuraFace embedding run against a freshly downloaded, freshly quantized model -- same-crop distance 0.0, face-vs-noise distance ~0.80 -- given this project's documented history of real torch/CUDA DLL conflicts tied to insightface's import chain). |
 
 ### Known gaps for a future pass
 
@@ -1093,6 +1299,10 @@ See `docs/limitations.md` for the full, categorized list. Highlights:
   model's own bundled non-gunshot real-world test clips (a legitimate
   negative control, not a substitute for a true-positive check). See
   `docs/local-ai.md`'s "Gunshot detection" section.
+- `opencv-contrib-python-headless` is pinned below 5.0.0 on purpose (real
+  regression: 5.x stopped bundling the Haar cascade data files the
+  zero-setup classical face/plate fallback needs) -- see the "Public
+  release" section above before ever bumping this.
 
 ## Conventions for future changes
 
@@ -1144,6 +1354,16 @@ See `docs/limitations.md` for the full, categorized list. Highlights:
 - **Line length 100, ruff-formatted, strict mypy on `src/`.** Run
   `ruff check . && ruff format . && mypy src` before considering a change
   done.
+- **A dependency version bump (dependabot or manual) gets verified in a
+  fresh venv before merging, never assumed from a long-lived local
+  environment.** A major-version (ceiling-raising) bump additionally
+  needs a real functional check of anything it touches that has prior
+  fragility history, not just "tests pass." See the "Public release"
+  section's "Verifying a dependency bump" callout for the full discipline
+  and why it exists.
+- **Publishing anything to the public GitHub repo goes through
+  `public-release`, never `master` directly, and never without asking
+  first.** See the "Public release" section for the exact procedure.
 
 ## Where to look for more detail
 
@@ -1170,3 +1390,14 @@ See `docs/limitations.md` for the full, categorized list. Highlights:
 - `docs/developer-setup.md`, `docs/cli-examples.md` -- practical usage
 - `docs/diagrams/pipeline-sequence.md` -- mermaid sequence diagrams for
   ingest->analyze, preserve, and export
+- `SECURITY.md` -- the two-step private disclosure process (see the
+  "Public release" section above for why it's shaped that way)
+- `CONTRIBUTING.md` -- human-contributor on-ramp; a shorter, friendlier
+  companion to this file's own conventions
+- `CODE_OF_CONDUCT.md` -- Contributor Covenant 2.1
+- `CHANGELOG.md` -- a public-facing, version-numbered summary of what
+  shipped and why, shorter and less internally-detailed than this file's
+  own "Repo history context"/"Status tracker"
+- `LICENSE` -- the full, verbatim AGPL-3.0 text; `EULA.md` and
+  `GENERATED_CONTENT_LICENSE.md` cover intended-use scope and generated-
+  output licensing respectively
