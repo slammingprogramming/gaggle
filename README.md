@@ -100,7 +100,6 @@ docs/           getting-started guide, pipeline walkthrough, architecture,
                 diagrams
 examples/       real sample media + example config + example event.json
 scripts/        standalone operational tooling (e.g. verify_export_bundle.py)
-AGENTS.md       working reference for anyone (human or agent) developing here
 ```
 
 See `docs/architecture.md` for the full module map, the hybrid storage

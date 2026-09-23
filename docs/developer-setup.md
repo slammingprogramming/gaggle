@@ -102,10 +102,8 @@ recommended `ruff`/`mypy`/`python` extensions automatically.
 ## Project layout quick reference
 
 See `docs/architecture.md` for the full module map. The short version:
-everything lives under `src/gaggle/<subsystem>/`, tests mirror
-that structure under `tests/unit/` and `tests/integration/`, and
-`AGENTS.md` at the repo root is the working reference for anyone (human or
-agent) making changes -- read it before making structural changes.
+everything lives under `src/gaggle/<subsystem>/`, and tests mirror
+that structure under `tests/unit/` and `tests/integration/`.
 
 ## Common gotchas
 

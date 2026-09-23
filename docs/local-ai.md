@@ -443,8 +443,8 @@ existing `triage` benign-clip workflow (classify, then a separate
 human-confirmed deletion step) rather than deleting anything the moment
 you make a decision. Every confirm/reject/purge action requires an
 `--actor` and is permanently logged (`workspace/recognition_review_log.jsonl`,
-`workspace/recognition_crop_purge_log.jsonl`) before anything changes --
-see AGENTS.md's invariant 22. Pass `--purge` (CLI) or `purge: true` (API)
+`workspace/recognition_crop_purge_log.jsonl`) before anything changes.
+Pass `--purge` (CLI) or `purge: true` (API)
 on a confirm/reject action to do both steps at once when you're sure.
 
 **Confirming a cluster** picks one or more representative observations
@@ -698,8 +698,7 @@ detection:
 If a GPS track is available alongside your dashcam footage, `analyze`
 runs a built-in `TelemetryDetector` that flags three kinds of
 "interesting" driving moments as weak, corroborating `Signal`s (never, by
-themselves, enough to reach high severity -- see invariant 7 in
-`AGENTS.md`):
+themselves, enough to reach high severity):
 
 * **Hard braking** -- deceleration between two consecutive GPS fixes at or
   above `hard_braking_threshold_mps2`.
@@ -798,9 +797,8 @@ already has); very fast real-world closures between samples can produce
 displacement large enough to break Farneback's local-window tracking
 assumption, showing up as noisy rather than cleanly-signed divergence; a
 genuinely slow, gradual approach can fall below what this technique can
-resolve at all. This is a corroborating signal only (invariant 7 in
-`AGENTS.md`) -- never sufficient alone for high severity, and not a
-claim to catch every real approach.
+resolve at all. This is a corroborating signal only -- never sufficient
+alone for high severity, and not a claim to catch every real approach.
 
 ## Gunshot detection
 
@@ -865,7 +863,7 @@ lone gunshot detection, however confident the classifier was, is capped
 at 0.60 confidence and -- because `ScoringService` requires at least two
 distinct corroborating signal *types* for medium/high severity,
 regardless of any single signal's own confidence -- can never alone
-reach medium or high severity (AGENTS.md invariant 7). A gunshot-like
+reach medium or high severity. A gunshot-like
 sound that coincides with visual motion is a separate, explicit rule
 (`gunshot_plus_motion`) with a real confidence bump, the same
 corroboration-bonus pattern `motion_plus_audio_spike` already uses.

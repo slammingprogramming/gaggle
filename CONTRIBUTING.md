@@ -1,10 +1,10 @@
 # Contributing to Gaggle
 
 Thanks for considering a contribution. This is a small guide for human
-contributors; **`AGENTS.md`** is the deeper working reference (module map,
-non-negotiable invariants, conventions for future changes) and applies to
-every contributor, human or AI-assisted -- read it before a non-trivial
-change.
+contributors; see `docs/architecture.md` for the module map and design
+rationale, and the "Ground rules that shape review" section below for the
+non-negotiable invariants that apply to every contributor, human or
+AI-assisted -- read them before a non-trivial change.
 
 **Security vulnerability?** Don't open an issue or PR describing it --
 see [`SECURITY.md`](SECURITY.md) for the private reporting process instead.
@@ -48,8 +48,7 @@ build/smoke test) on every push and PR.
 
 ## Ground rules that shape review
 
-These are the ones that come up most; the full list is AGENTS.md's
-"Non-negotiable invariants" section.
+These are the ones that come up most in review.
 
 - **Never mutate original media or edit an already-written `event.json` in
   place.** Every change is a new revision (`storage/repository.py::save_event_revision`)

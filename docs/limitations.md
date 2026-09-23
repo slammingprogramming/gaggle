@@ -297,8 +297,8 @@ deliberate design choice or a known gap worth closing later.
   mode. A camera that only offers a live stream needs an external
   recorder/NVR to produce files first. This was an explicit scope decision
   for this pass, not an oversight -- see `docs/architecture.md`'s module
-  map and AGENTS.md's status tracker for what a future `SourceAdapterPlugin`
-  covering this would look like.
+  map for what a future `SourceAdapterPlugin` covering this would look
+  like.
 * **`pipeline.max_event_duration_seconds`'s 120s default is a reasoned
   starting point, not validated against every real driving scenario.**
   `core/pipeline.py::_cluster_overlapping_windows` forces a split once a

@@ -11,7 +11,7 @@
       and, if user-facing, in `docs/local-ai.md`
 - [ ] Any schema change is additive (safe defaults) and, if it touches
       SQLite tables, ships a new Alembic migration under
-      `src/gaggle/storage/migrations/versions/` -- see AGENTS.md invariant 5
+      `src/gaggle/storage/migrations/versions/`
 - [ ] No real personal data, credentials, or machine-specific paths are
       included in this diff (sample media, fixtures, and docs only)
 
