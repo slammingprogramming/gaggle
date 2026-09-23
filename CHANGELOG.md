@@ -9,6 +9,32 @@ For deep implementation rationale behind any entry below, see
 `AGENTS.md`'s "Repo history context" section, which keeps a much more
 detailed internal narrative per pass.
 
+## [1.11.0]
+
+### Added
+
+- Public GitHub release, `github.com/slammingprogramming/gaggle`, as a
+  dual-repo setup alongside the private keybase repo: standard community
+  files (`SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, issue/PR
+  templates, dependabot config), full verbatim AGPL-3.0 `LICENSE` text,
+  README badges, and a published, verified-clean PII audit.
+- Least-privilege `permissions: contents: read` on CI workflows.
+
+### Fixed
+
+- Three CodeQL alerts: a reflected-XSS gap in the review UI (defense-in-depth
+  HTML escaping) and two missing-workflow-permissions findings.
+- CI failures surfaced by the first real GitHub Actions run: a ruff
+  version-drift formatting gap (now pinned exactly) and two undeclared
+  optional-dependency gaps (`cryptography` missing from mypy overrides,
+  `httpx2` missing from the `dev` extra).
+
+### Changed
+
+- Dependency updates across 23 dependabot PRs, each verified in a fresh
+  venv rather than merged blindly. `opencv-contrib-python-headless` 5.x
+  was deliberately rejected (see `AGENTS.md`) and capped below 5.0.0.
+
 ## [1.10.0]
 
 ### Added
@@ -111,6 +137,7 @@ detailed internal narrative per pass.
 - Identity linking, merge suggestions, and search across recognized
   faces/plates/voices/vehicles.
 
+[1.11.0]: https://github.com/slammingprogramming/gaggle/releases/tag/v1.11.0
 [1.10.0]: https://github.com/slammingprogramming/gaggle/releases/tag/v1.10.0
 [1.9.0]: https://github.com/slammingprogramming/gaggle/releases/tag/v1.9.0
 [1.8.0]: https://github.com/slammingprogramming/gaggle/releases/tag/v1.8.0
