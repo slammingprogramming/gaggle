@@ -13,7 +13,7 @@ authors = [{ name = "SlammingProgramming and contributors" }]
 dependencies = [
   "alembic>=1.13,<2.0.0",
   "fastapi>=0.141.1,<1.0.0",
-  "numpy>=2.5.2,<3.0.0",
+  "numpy>=2.5.3,<3.0.0",
   # Deliberately capped below 5.0.0, not just left unbumped: verified
   # for real (fresh install + full test suite) that
   # opencv-contrib-python-headless 5.0.0 no longer bundles the Haar
