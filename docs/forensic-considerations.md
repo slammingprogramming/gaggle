@@ -54,8 +54,10 @@ automated findings it's responding to (see `docs/chain-of-custody.md`).
   extension, but its output would still be a `Signal` with a confidence
   score, subject to the same corroboration rules as everything else.
 
-None of the built-in detectors perform identification (no face recognition,
-no license plate recognition, no biometric matching of any kind).
+None of the core-pipeline detectors (motion, audio spikes, object hints)
+perform identification. Recognition exists only as the separate enrichment
+stage (`gaggle enrich`) and never names anyone; see "Recognition data:
+scope and intent" below.
 
 ## Multi-camera correlation
 
@@ -116,19 +118,24 @@ separately-justified design change:**
   different legal and ethical obligations than reviewing your own dashcam
   footage after a near-miss.
 
-**Legal considerations you should review before enabling face
+**Legal considerations you should review before enabling face or voice
 recognition specifically** (license plates are generally less regulated,
-but check your jurisdiction): several jurisdictions treat facial
+but check your jurisdiction): several jurisdictions treat facial and voice
 biometric data as a specially protected category with obligations that can
 apply even to a private individual's personal recording -- for example,
 Illinois' Biometric Information Privacy Act (BIPA) and the EU/UK GDPR's
 treatment of biometric data as a "special category." Whether and how these
 apply to a personal dashcam depends on your jurisdiction, whether you
 record other identifiable people, and how you use or share the resulting
-data. This is not legal advice; if face recognition matters for your use
-case, understand your local law before enabling it. `enrichment.face.enabled`
-defaults to `true` for convenience, but can be turned off entirely in
-config with no loss of any other capability.
+data. This is not legal advice; if face or voice recognition matters for
+your use case, understand your local law before enabling it.
+
+Nothing in ingest or analysis performs recognition: it runs only when you
+run `gaggle enrich`. Within that command the face, plate, voice and
+vehicle-appearance features are enabled by default, and each can be switched
+off in config (`enrichment.face.enabled`, `enrichment.plate.enabled`,
+`enrichment.voice.enabled`, `enrichment.vehicle_appearance.enabled`) with no
+loss of any other capability.
 
 ## Limitations that affect forensic weight
 

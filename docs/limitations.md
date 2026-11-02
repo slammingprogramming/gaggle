@@ -6,12 +6,17 @@ deliberate design choice or a known gap worth closing later.
 ## Deliberate design choices (not planned to change without a reason)
 
 * **No cloud dependency, ever.** By design. Not a limitation to fix.
-* **No object/face/plate classification in the built-in pipeline.** The
-  built-in object-hint detector reports bounding boxes for large moving
-  regions, not identities or classes. A real classifier is meant to arrive
-  as a `DetectorPlugin`, not as a built-in default (see
-  `docs/plugin-authoring.md` and the ML-avoidance directive in
-  `docs/architecture.md`).
+* **The core pipeline does no classification or recognition; recognition is
+  a separate, local enrichment stage.** The core detectors (motion, audio
+  spikes, object hints) report that something changed, with a bounding box
+  for large moving regions, not what it was or who. Face, plate, voice and
+  vehicle-appearance re-identification are built in, but only in the
+  separate `gaggle enrich` command (see `docs/local-ai.md`), which you run
+  deliberately and which looks only at the derived clips of flagged events.
+  It re-identifies (this signal was seen before); it never names anyone. A
+  general object classifier is still meant to arrive as a `DetectorPlugin`,
+  not as a built-in default (see `docs/plugin-authoring.md` and the
+  ML-avoidance directive in `docs/architecture.md`).
 * **Time synchronization is a start-alignment + proportional-drift
   heuristic**, not measured clock offset. There is no audio/video
   cross-correlation between cameras. See `normalize/sync.py`'s docstring

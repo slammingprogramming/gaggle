@@ -56,6 +56,11 @@ gaggle review start --actor "you" --workspace ./workspace
 gaggle review-ui --workspace ./workspace   # http://127.0.0.1:8000
 ```
 
+> Recognition (`gaggle enrich`) is local re-identification only -- it never
+> names anyone -- and runs only when you run that command. Read "Recognition
+> data: scope and intent" in `docs/forensic-considerations.md` before
+> enabling it.
+
 `examples/sample_media` contains two short, real, generated video clips (not
 fixtures) -- running the commands above exercises real ffprobe metadata
 extraction, real OpenCV motion analysis, and real scipy audio-spike

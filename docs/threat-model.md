@@ -102,7 +102,11 @@ JSON hash of the one before it. This means:
 This system does not attempt to, and should never be extended to:
 
 * Autonomously determine fault, guilt, or legal conclusions.
-* Identify individuals (no face/plate recognition in the built-in pipeline).
+* Identify individuals: resolve a face, plate or voice to a name or any
+  real-world identity. Local re-identification (anonymous clusters that the
+  user may label privately) is built in as an enrichment stage; name
+  resolution, external lookups and shared or networked recognition are not,
+  and should never be added.
 * Operate as predictive policing or mass-surveillance infrastructure.
 * Replace human review -- every automated output here is a hypothesis with
   attached confidence and reasoning, and severity scoring is deliberately

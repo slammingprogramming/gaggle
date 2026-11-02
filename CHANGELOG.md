@@ -9,6 +9,16 @@ For deep implementation rationale behind any entry below, see
 `AGENTS.md`'s "Repo history context" section, which keeps a much more
 detailed internal narrative per pass.
 
+## [Unreleased]
+
+### Changed
+
+- Documentation: aligned the limitations page, threat model and
+  forensic-considerations page with the built-in recognition enrichment
+  stage (recognition runs only via `gaggle enrich` and never names anyone);
+  added voice to the lawful-use note; added a responsible-use pointer to
+  the README.
+
 ## [1.11.0]
 
 ### Added
